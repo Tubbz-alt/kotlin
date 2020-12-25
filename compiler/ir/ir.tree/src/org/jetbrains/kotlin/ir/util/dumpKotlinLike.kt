@@ -35,6 +35,18 @@ fun IrElement.dumpKotlinLike(options: KotlinLikeDumpOptions = KotlinLikeDumpOpti
     return sb.toString()
 }
 
+fun IrType.dumpKotlinLike(options: KotlinLikeDumpOptions = KotlinLikeDumpOptions()): String {
+    val sb = StringBuilder()
+    KotlinLikeDumper(Printer(sb, 1, "  "), options).printType(this)
+    return sb.toString()
+}
+
+fun IrTypeArgument.dumpKotlinLike(options: KotlinLikeDumpOptions = KotlinLikeDumpOptions()): String {
+    val sb = StringBuilder()
+    KotlinLikeDumper(Printer(sb, 1, "  "), options).printTypeArgument(this)
+    return sb.toString()
+}
+
 class KotlinLikeDumpOptions(
     val printRegionsPerFile: Boolean = false,
     val printFileName: Boolean = true,
@@ -383,6 +395,21 @@ private class KotlinLikeDumper(val p: Printer, val options: KotlinLikeDumpOption
         return myFirst
     }
 
+    fun printType(type: IrType) {
+        type.printTypeWithNoIndent()
+    }
+
+    fun printTypeArgument(typeArg: IrTypeArgument) {
+        when (typeArg) {
+            is IrStarProjection ->
+                p.printWithNoIndent("*")
+            is IrTypeProjection -> {
+                typeArg.variance.printVarianceWithNoIndent()
+                typeArg.type.printTypeWithNoIndent()
+            }
+        }
+    }
+
     private fun IrType.printTypeWithNoIndent() {
         // TODO don't print `Any?` as upper bound?
         printAnnotationsWithNoIndent()
@@ -397,14 +424,7 @@ private class KotlinLikeDumper(val p: Printer, val options: KotlinLikeDumpOption
                     arguments.forEachIndexed { i, typeArg ->
                         p(i > 0, ",")
 
-                        when (typeArg) {
-                            is IrStarProjection ->
-                                p.printWithNoIndent("*")
-                            is IrTypeProjection -> {
-                                typeArg.variance.printVarianceWithNoIndent()
-                                typeArg.type.printTypeWithNoIndent()
-                            }
-                        }
+                        printTypeArgument(typeArg)
                     }
                     p.printWithNoIndent(">")
                 }
