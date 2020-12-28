@@ -169,7 +169,7 @@ open class CreateKotlinClassDialog(
     private val packageName: String
         get() {
             val name = myPackageComponent.text
-            return name?.trim { it <= ' ' } ?: ""
+            return name?.trim() ?: ""
         }
 
     private class MyTextField : JTextField() {
