@@ -9,7 +9,6 @@ import org.jetbrains.kotlin.backend.common.ir.SharedVariablesManager
 import org.jetbrains.kotlin.backend.common.lower.InnerClassesSupport
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.backend.js.JsCommonBackendContext
 import org.jetbrains.kotlin.ir.backend.js.JsLoweredDeclarationOrigin
@@ -31,6 +30,7 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrVariableSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -48,11 +48,17 @@ class WasmSharedVariablesManager(val context: JsCommonBackendContext, val builtI
         val constructorSymbol = closureBoxConstructorDeclaration.symbol
 
         val irCall =
-            @OptIn(ObsoleteDescriptorBasedAPI::class)
-            IrConstructorCallImpl.fromSymbolDescriptor(initializer.startOffset, initializer.endOffset, closureBoxType, constructorSymbol)
-                .apply {
-                    putValueArgument(0, initializer)
-                }
+            IrConstructorCallImpl(
+                initializer.startOffset,
+                initializer.endOffset,
+                closureBoxType,
+                constructorSymbol,
+                closureBoxConstructorDeclaration.parentAsClass.typeParameters.size,
+                closureBoxConstructorDeclaration.typeParameters.size,
+                closureBoxConstructorDeclaration.valueParameters.size
+            ).apply {
+                putValueArgument(0, initializer)
+            }
 
         return IrVariableImpl(
             originalDeclaration.startOffset,
