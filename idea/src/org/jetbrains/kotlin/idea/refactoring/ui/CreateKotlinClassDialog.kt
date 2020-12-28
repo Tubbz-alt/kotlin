@@ -184,7 +184,7 @@ open class CreateKotlinClassDialog(
     override fun doOKAction() {
         RecentsManager.getInstance(myProject).registerRecentEntry(RECENTS_KEY, myPackageComponent.text)
         val packageName = packageName
-        val errorString = arrayOfNulls<String>(1)
+        var errorString: String? = null
         CommandProcessor.getInstance().executeCommand(myProject, {
             try {
                 val targetPackage = PackageWrapper(PsiManager.getInstance(myProject), packageName)
@@ -192,7 +192,7 @@ open class CreateKotlinClassDialog(
                 targetDirectory = WriteAction.compute<PsiDirectory, RuntimeException> {
                     val baseDir = getBaseDir(packageName)
                     if (baseDir == null && destination is MultipleRootsMoveDestination) {
-                        errorString[0] = message("destination.not.found.for.package.0", packageName)
+                        errorString = message("destination.not.found.for.package.0", packageName)
                         return@compute null
                     }
                     destination.getTargetDirectory(baseDir)
@@ -200,18 +200,16 @@ open class CreateKotlinClassDialog(
                 if (targetDirectory == null) {
                     return@executeCommand
                 }
-                errorString[0] = RefactoringMessageUtil.checkCanCreateClass(targetDirectory, className)
+                errorString = RefactoringMessageUtil.checkCanCreateClass(targetDirectory, className)
             } catch (e: IncorrectOperationException) {
-                errorString[0] = e.message
+                errorString = e.message
             }
         }, CodeInsightBundle.message("create.directory.command"), null)
-        if (errorString[0] != null) {
-            if (errorString[0]!!.isNotEmpty()) {
-                Messages.showMessageDialog(myProject, errorString[0], CommonBundle.getErrorTitle(), Messages.getErrorIcon())
-            }
-            return
-        }
-        super.doOKAction()
+
+        errorString?.let {
+            if (it.isNotEmpty())
+                Messages.showMessageDialog(myProject, errorString, CommonBundle.getErrorTitle(), Messages.getErrorIcon())
+        } ?: super.doOKAction()
     }
 
     protected open fun getBaseDir(packageName: String?): PsiDirectory? {
