@@ -72,7 +72,7 @@ open class CreateKotlinClassDialog(
         private set
     private val myDestinationCB: KotlinDestinationFolderComboBox = object : KotlinDestinationFolderComboBox() {
         override fun getTargetPackage(): String {
-            return myPackageComponent.text.trim { it <= ' ' }
+            return myPackageComponent.text.trim()
         }
 
         override fun reportBaseInTestSelectionInSource(): Boolean {
