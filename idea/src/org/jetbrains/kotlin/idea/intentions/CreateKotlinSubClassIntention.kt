@@ -75,12 +75,8 @@ class CreateKotlinSubClassIntention : SelfTargetingRangeIntention<KtClass>(
         if (editor == null) throw IllegalArgumentException("This intention requires an editor")
 
         val name = element.name ?: throw IllegalStateException("This intention should not be applied to anonymous classes")
-        if (element.isSealed()) {
-            if (element.languageVersionSettings.supportsFeature(LanguageFeature.SealedInterfaces)) {
-                createExternalSubclass(element, name, editor)
-            } else {
-                createNestedSubclass(element, name, editor)
-            }
+        if (element.isSealed() && !element.languageVersionSettings.supportsFeature(LanguageFeature.SealedInterfaces)) {
+            createNestedSubclass(element, name, editor)
         } else {
             createExternalSubclass(element, name, editor)
         }
